@@ -1,0 +1,23 @@
+name: Desplegar a Azure App Service
+
+on:
+  push:
+    branches:
+      - main  # Cambia a 'master' si esa es tu rama principal
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout código del repositorio
+      uses: actions/checkout@v4
+      
+    - name: Desplegar a Azure App Service usando perfil de publicación
+      uses: azure/webapps-deploy@v3
+      with:
+        app-name: ${{ secrets.AZURE_WEBAPP_NAME }}  # Nombre de tu App Service en Azure
+        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}  # Perfil de publicación como secreto
+        package: .  # Directorio a desplegar (todos los archivos estáticos)
+
