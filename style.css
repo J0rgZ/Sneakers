@@ -61,11 +61,21 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
+    background: white;
+    border-radius: 50%;
+    padding: 5px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .logo svg {
     width: 100%;
     height: 100%;
+}
+
+.logo-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
 }
 
 .logo-text {
@@ -523,9 +533,9 @@ body {
     margin: 0 auto;
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start;
     flex-wrap: wrap;
-    gap: 30px;
+    gap: 40px;
 }
 
 .footer-copyright h5 {
@@ -542,6 +552,73 @@ body {
     color: rgba(255, 255, 255, 0.6);
     font-size: 14px;
     margin: 5px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.footer-copyright p i {
+    color: #4ecdc4;
+}
+
+.footer-social {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.footer-social h6 {
+    color: white;
+    font-weight: 700;
+    margin-bottom: 10px;
+    font-size: 16px;
+    background: linear-gradient(135deg, #ff6b6b 0%, #4ecdc4 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.social-links {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.social-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: rgba(255, 255, 255, 0.7);
+    text-decoration: none;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    padding: 8px 12px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.social-link:hover {
+    color: white;
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateX(5px);
+}
+
+.social-link i {
+    font-size: 18px;
+    width: 20px;
+    text-align: center;
+}
+
+.social-link[href*="instagram"] i {
+    color: #E4405F;
+}
+
+.social-link[href*="tiktok"] i {
+    color: #000000;
+}
+
+.social-link[href*="whatsapp"] i {
+    color: #25D366;
 }
 
 .footer-links p {
@@ -1004,6 +1081,24 @@ body {
     justify-content: center;
     margin-bottom: 30px;
     flex-wrap: wrap;
+}
+
+.success-actions .btn-success {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    border: none;
+    color: white;
+    padding: 15px 30px;
+    font-weight: 700;
+    border-radius: 50px;
+    transition: all 0.3s ease;
+    box-shadow: 0 5px 20px rgba(40, 167, 69, 0.3);
+}
+
+.success-actions .btn-success:hover {
+    background: linear-gradient(135deg, #20c997, #28a745);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(40, 167, 69, 0.5);
+    color: white;
 }
 
 .success-note {

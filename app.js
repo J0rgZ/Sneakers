@@ -502,6 +502,11 @@ function validarFormulario() {
             elemento: document.getElementById('nombre'),
             mensaje: 'Por favor ingresa tu nombre completo'
         },
+        dni: {
+            elemento: document.getElementById('dni'),
+            mensaje: 'Por favor ingresa un DNI válido (8 dígitos)',
+            validacion: (valor) => /^[0-9]{8}$/.test(valor.replace(/\s/g, ''))
+        },
         telefono: {
             elemento: document.getElementById('telefono'),
             mensaje: 'Por favor ingresa un número de teléfono válido',
@@ -609,6 +614,7 @@ function mostrarConfirmacion(datosFormulario) {
             <div class="confirm-section">
                 <h6><i class="bi bi-person"></i> Datos de Contacto</h6>
                 <p><strong>Nombre:</strong> ${datosFormulario.nombre}</p>
+                <p><strong>DNI:</strong> ${datosFormulario.dni}</p>
                 <p><strong>Email:</strong> ${datosFormulario.email}</p>
                 <p><strong>Teléfono:</strong> ${datosFormulario.telefono}</p>
             </div>
@@ -650,6 +656,7 @@ function simularPago(event) {
     // Obtener datos del formulario
     const datosFormulario = {
         nombre: document.getElementById('nombre').value.trim(),
+        dni: document.getElementById('dni').value.trim(),
         telefono: document.getElementById('telefono').value.trim(),
         email: document.getElementById('email').value.trim(),
         direccion: document.getElementById('direccion').value.trim(),
@@ -676,6 +683,9 @@ function simularPago(event) {
     }
 }
 
+// Variable global para guardar datos del pedido para el PDF
+let datosPedidoPDF = null;
+
 // Procesar el pago después de confirmación
 function procesarPago(datosFormulario) {
     const btnConfirmar = document.getElementById('btn-confirmar-pago');
@@ -690,6 +700,14 @@ function procesarPago(datosFormulario) {
         const modal = bootstrap.Modal.getInstance(document.getElementById('confirmModal'));
         if (modal) modal.hide();
         
+        // Guardar datos del pedido para el PDF antes de limpiar
+        datosPedidoPDF = {
+            datosFormulario: datosFormulario,
+            carrito: JSON.parse(JSON.stringify(carrito)),
+            numeroPedido: Math.floor(Math.random() * 1000000),
+            fecha: new Date()
+        };
+        
         // Mostrar mensaje de éxito
         mostrarMensajeExito(datosFormulario);
         
@@ -697,11 +715,6 @@ function procesarPago(datosFormulario) {
         localStorage.removeItem('carrito');
         carrito = [];
         actualizarContadorCarrito();
-        
-        // Redirigir después de 5 segundos
-        setTimeout(() => {
-            window.location.href = 'index.html';
-        }, 5000);
     }, 2000);
 }
 
@@ -710,11 +723,20 @@ function mostrarMensajeExito(datosFormulario) {
     const checkoutSection = document.getElementById('checkout-section');
     if (!checkoutSection) return;
     
-    // Calcular totales
+    // Calcular totales usando datosPedidoPDF si está disponible
+    const carritoActual = datosPedidoPDF ? datosPedidoPDF.carrito : carrito;
+    const numeroPedido = datosPedidoPDF ? datosPedidoPDF.numeroPedido : Math.floor(Math.random() * 1000000);
+    const fechaPedido = datosPedidoPDF ? datosPedidoPDF.fecha : new Date();
+    
     let subtotal = 0;
-    carrito.forEach(p => subtotal += p.precio);
+    carritoActual.forEach(p => subtotal += p.precio);
     const costoEnvio = subtotal >= 100 ? 0 : 15.00;
-    const total = subtotal + costoEnvio;
+    const subtotalConEnvio = subtotal + costoEnvio;
+    
+    // Cálculo de IGV 18% (Perú)
+    const subtotalSinIGV = subtotalConEnvio / 1.18;
+    const igv = subtotalConEnvio - subtotalSinIGV;
+    const total = subtotalConEnvio;
     
     checkoutSection.innerHTML = `
         <div class="success-message">
@@ -727,9 +749,9 @@ function mostrarMensajeExito(datosFormulario) {
             <div class="success-details">
                 <div class="success-card">
                     <h5><i class="bi bi-receipt"></i> Resumen de tu Pedido</h5>
-                    <p><strong>Número de Pedido:</strong> #${Math.floor(Math.random() * 1000000)}</p>
+                    <p><strong>Número de Pedido:</strong> #${numeroPedido}</p>
                     <p><strong>Total Pagado:</strong> S/ ${total.toFixed(2)}</p>
-                    <p><strong>Fecha:</strong> ${new Date().toLocaleDateString('es-PE', { 
+                    <p><strong>Fecha:</strong> ${fechaPedido.toLocaleDateString('es-PE', { 
                         year: 'numeric', 
                         month: 'long', 
                         day: 'numeric',
@@ -754,6 +776,9 @@ function mostrarMensajeExito(datosFormulario) {
             </div>
             
             <div class="success-actions">
+                <button onclick="generarPDFBoleta()" class="btn btn-success btn-lg">
+                    <i class="bi bi-file-earmark-pdf"></i> Descargar Boleta PDF
+                </button>
                 <a href="index.html" class="btn btn-primary btn-lg">
                     <i class="bi bi-house"></i> Volver al Inicio
                 </a>
@@ -770,6 +795,278 @@ function mostrarMensajeExito(datosFormulario) {
     
     // Scroll al inicio
     window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Generar PDF de Boleta de Venta con IGV 18%
+async function generarPDFBoleta() {
+    if (!datosPedidoPDF) {
+        mostrarNotificacion('⚠️ No hay datos del pedido disponibles', 'warning');
+        return;
+    }
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    
+    const datos = datosPedidoPDF.datosFormulario;
+    const carritoPedido = datosPedidoPDF.carrito;
+    const numeroPedido = datosPedidoPDF.numeroPedido;
+    const fecha = datosPedidoPDF.fecha;
+    
+    // Calcular totales
+    let subtotal = 0;
+    carritoPedido.forEach(p => subtotal += p.precio);
+    const costoEnvio = subtotal >= 100 ? 0 : 15.00;
+    const subtotalConEnvio = subtotal + costoEnvio;
+    
+    // Cálculo de IGV 18% (Perú)
+    const opGravada = subtotalConEnvio / 1.18;
+    const igv = subtotalConEnvio - opGravada;
+    const total = subtotalConEnvio;
+    
+    // Configuración
+    let y = 20;
+    const marginLeft = 15;
+    const marginRight = 15;
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    
+    // Cargar logo usando canvas
+    let logoCargado = false;
+    try {
+        const response = await fetch('logo_empresa/logo2.png');
+        const blob = await response.blob();
+        const img = new Image();
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        await new Promise((resolve, reject) => {
+            img.onload = () => {
+                canvas.width = img.width;
+                canvas.height = img.height;
+                ctx.fillStyle = 'white';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(img, 0, 0);
+                resolve();
+            };
+            img.onerror = reject;
+            img.src = URL.createObjectURL(blob);
+            setTimeout(() => reject(new Error('Timeout')), 5000);
+        });
+        
+        const logoDataUrl = canvas.toDataURL('image/png');
+        const logoWidth = 40;
+        const logoHeight = 40;
+        doc.addImage(logoDataUrl, 'PNG', marginLeft, y, logoWidth, logoHeight);
+        logoCargado = true;
+    } catch (e) {
+        console.log('Logo no disponible, continuando sin logo');
+    }
+    
+    // Información de la empresa (lado izquierdo, después del logo)
+    const empresaStartY = logoCargado ? y + 45 : y;
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(0, 0, 0);
+    doc.text('SNEAKERS STYLE S.A.C.', marginLeft, empresaStartY);
+    
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Av. Leguía N.° 1540', marginLeft, empresaStartY + 5);
+    doc.text('Tacna - Perú', marginLeft, empresaStartY + 10);
+    doc.text('Telf: 993528626', marginLeft, empresaStartY + 15);
+    doc.text('Email: contacto@sneakersstyle.com', marginLeft, empresaStartY + 20);
+    
+    // Caja RUC (lado superior derecho)
+    const rucBoxX = pageWidth - marginRight - 35;
+    const rucBoxY = y;
+    doc.setFillColor(0, 0, 0);
+    doc.roundedRect(rucBoxX, rucBoxY, 35, 12, 2, 2, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(7);
+    doc.setFont('helvetica', 'bold');
+    doc.text('R.U.C.', rucBoxX + 17.5, rucBoxY + 5, { align: 'center' });
+    doc.setFontSize(8);
+    doc.text('20659874231', rucBoxX + 17.5, rucBoxY + 9.5, { align: 'center' });
+    doc.setTextColor(0, 0, 0);
+    
+    // Caja BOLETA DE VENTA ELECTRÓNICA (lado derecho, debajo del RUC)
+    const boletaBoxX = pageWidth - marginRight - 50;
+    const boletaBoxY = rucBoxY + 15;
+    doc.setFillColor(240, 240, 240);
+    doc.roundedRect(boletaBoxX, boletaBoxY, 50, 22, 2, 2, 'F');
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    doc.text('BOLETA DE VENTA', boletaBoxX + 25, boletaBoxY + 7, { align: 'center' });
+    doc.text('ELECTRÓNICA', boletaBoxX + 25, boletaBoxY + 13, { align: 'center' });
+    doc.setFontSize(8);
+    doc.text(`N° B002 - ${numeroPedido.toString().padStart(8, '0')}`, boletaBoxX + 25, boletaBoxY + 19, { align: 'center' });
+    
+    y = Math.max(empresaStartY + 25, boletaBoxY + 28);
+    
+    // Línea separadora
+    doc.setLineWidth(0.3);
+    doc.setDrawColor(150, 150, 150);
+    doc.line(marginLeft, y, pageWidth - marginRight, y);
+    y += 8;
+    
+    // Datos del cliente (lado izquierdo)
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    
+    const clienteLeft = marginLeft;
+    const clienteRight = pageWidth - marginRight;
+    let clienteY = y;
+    
+    doc.text('Cliente:', clienteLeft, clienteY);
+    doc.setFont('helvetica', 'bold');
+    doc.text(datos.nombre || '-', clienteLeft + 18, clienteY);
+    clienteY += 5;
+    
+    doc.setFont('helvetica', 'normal');
+    doc.text('Dirección:', clienteLeft, clienteY);
+    doc.text(datos.direccion || '-', clienteLeft + 18, clienteY);
+    clienteY += 5;
+    
+    doc.text('DNI:', clienteLeft, clienteY);
+    doc.text(datos.dni || '-', clienteLeft + 18, clienteY);
+    
+    // Fecha y condiciones (lado derecho)
+    clienteY = y;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.text('FECHA EMISIÓN:', clienteRight - 50, clienteY, { align: 'right' });
+    doc.text(fecha.toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' }), clienteRight, clienteY);
+    clienteY += 5;
+    
+    doc.text('COND. DE PAGO:', clienteRight - 50, clienteY, { align: 'right' });
+    doc.setFont('helvetica', 'bold');
+    doc.text('CONTADO', clienteRight, clienteY);
+    
+    y = Math.max(clienteY, y + 15) + 3;
+    
+    // Tabla de productos
+    const tableWidth = pageWidth - marginLeft - marginRight;
+    
+    // Encabezado de tabla
+    doc.setFillColor(240, 240, 240);
+    doc.rect(marginLeft, y - 4, tableWidth, 6, 'F');
+    y += 1;
+    
+    doc.setFontSize(7);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(0, 0, 0);
+    doc.text('CANTIDAD', marginLeft + 3, y);
+    doc.text('U.M', marginLeft + 22, y);
+    doc.text('DESCRIPCIÓN', marginLeft + 35, y);
+    doc.text('PRECIO UNIT.', marginLeft + 110, y);
+    doc.text('IMPORTE (Inc. IGV)', marginLeft + 150, y);
+    y += 6;
+    
+    // Productos agrupados
+    const productosAgrupados = {};
+    carritoPedido.forEach(producto => {
+        if (productosAgrupados[producto.id]) {
+            productosAgrupados[producto.id].cantidad++;
+        } else {
+            productosAgrupados[producto.id] = {
+                ...producto,
+                cantidad: 1
+            };
+        }
+    });
+    
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    Object.values(productosAgrupados).forEach((producto) => {
+        if (y > pageHeight - 60) {
+            doc.addPage();
+            y = 20;
+        }
+        
+        const totalProducto = producto.precio * producto.cantidad;
+        const nombreProducto = producto.nombre.length > 35 ? producto.nombre.substring(0, 32) + '...' : producto.nombre;
+        
+        doc.text(producto.cantidad.toString(), marginLeft + 3, y);
+        doc.text('UNIDAD', marginLeft + 22, y);
+        doc.text(nombreProducto, marginLeft + 35, y);
+        doc.text(`S/ ${producto.precio.toFixed(2)}`, marginLeft + 110, y);
+        doc.text(`S/ ${totalProducto.toFixed(2)}`, marginLeft + 150, y);
+        y += 5;
+    });
+    
+    y += 5;
+    
+    // Línea separadora antes de totales
+    doc.setLineWidth(0.3);
+    doc.setDrawColor(150, 150, 150);
+    doc.line(marginLeft, y, pageWidth - marginRight, y);
+    y += 8;
+    
+    // Totales (lado derecho)
+    const totalesStartX = pageWidth - marginRight - 50;
+    
+    // Monto en letras (lado izquierdo)
+    doc.setFontSize(7);
+    doc.setFont('helvetica', 'normal');
+    const numeroALetras = convertirNumeroALetras(total);
+    doc.text(`SON: ${numeroALetras}`, marginLeft, y);
+    y += 8;
+    
+    // Totales desglosados (lado derecho)
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    doc.text('OP. GRAVADA (S/):', totalesStartX - 35, y, { align: 'right' });
+    doc.setFont('helvetica', 'bold');
+    doc.text(`S/ ${opGravada.toFixed(2)}`, totalesStartX, y);
+    y += 5;
+    
+    doc.setFont('helvetica', 'normal');
+    doc.text('TOTAL IGV (S/):', totalesStartX - 35, y, { align: 'right' });
+    doc.setFont('helvetica', 'bold');
+    doc.text(`S/ ${igv.toFixed(2)}`, totalesStartX, y);
+    y += 5;
+    
+    doc.setFont('helvetica', 'normal');
+    doc.text('IMPORTE TOTAL (S/):', totalesStartX - 35, y, { align: 'right' });
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.text(`S/ ${total.toFixed(2)}`, totalesStartX, y);
+    
+    // Pie de página
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(6);
+    doc.setTextColor(100, 100, 100);
+    doc.text('Esta boleta es una simulación y no representa una transacción real.', pageWidth / 2, pageHeight - 15, { align: 'center' });
+    doc.text('Instagram: @sneakers_style_ | TikTok: sneakers.style | WhatsApp: 993528626', pageWidth / 2, pageHeight - 10, { align: 'center' });
+    
+    // Descargar PDF
+    doc.save(`Boleta-${numeroPedido}.pdf`);
+    
+    mostrarNotificacion('✅ Boleta PDF generada correctamente', 'success');
+}
+
+// Función auxiliar para convertir número a letras (simplificada)
+function convertirNumeroALetras(numero) {
+    const enteros = Math.floor(numero);
+    const decimales = Math.round((numero - enteros) * 100);
+    
+    const unidades = ['', 'UNO', 'DOS', 'TRES', 'CUATRO', 'CINCO', 'SEIS', 'SIETE', 'OCHO', 'NUEVE'];
+    const decenas = ['', '', 'VEINTE', 'TREINTA', 'CUARENTA', 'CINCUENTA', 'SESENTA', 'SETENTA', 'OCHENTA', 'NOVENTA'];
+    const especiales = ['DIEZ', 'ONCE', 'DOCE', 'TRECE', 'CATORCE', 'QUINCE', 'DIECISÉIS', 'DIECISIETE', 'DIECIOCHO', 'DIECINUEVE'];
+    
+    if (enteros === 0) return 'CERO CON ' + decimales.toString().padStart(2, '0') + '/100 SOLES';
+    if (enteros < 10) return unidades[enteros] + ' CON ' + decimales.toString().padStart(2, '0') + '/100 SOLES';
+    if (enteros < 20) return especiales[enteros - 10] + ' CON ' + decimales.toString().padStart(2, '0') + '/100 SOLES';
+    if (enteros < 100) {
+        const dec = Math.floor(enteros / 10);
+        const un = enteros % 10;
+        if (un === 0) return decenas[dec] + ' CON ' + decimales.toString().padStart(2, '0') + '/100 SOLES';
+        return decenas[dec] + ' Y ' + unidades[un] + ' CON ' + decimales.toString().padStart(2, '0') + '/100 SOLES';
+    }
+    
+    // Para números más grandes, simplificado
+    return numero.toFixed(2) + ' CON ' + decimales.toString().padStart(2, '0') + '/100 SOLES';
 }
 
 // Scroll to top

@@ -2,27 +2,57 @@
 const productos = [
     {
         id: 1,
-        nombre: "Sneaker Classic Black",
-        precio: 89.90,
-        imagen: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&h=400&fit=crop"
+        nombre: "Sneakers Urban Classic",
+        precio: 129.90,
+        imagen: "productos_imagenes/SNEAKERS - URBAN CLASIC.png"
     },
     {
         id: 2,
-        nombre: "Sneaker Runner White",
-        precio: 95.50,
-        imagen: "https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?w=400&h=400&fit=crop"
+        nombre: "Sneakers Urban Contemporary",
+        precio: 129.90,
+        imagen: "productos_imagenes/SNEAKERS - URBAN CONTEMPORARY.png"
     },
     {
         id: 3,
-        nombre: "Sneaker Sport Red",
-        precio: 79.90,
-        imagen: "https://images.unsplash.com/photo-1605348532760-6753d2c43329?w=400&h=400&fit=crop"
+        nombre: "Sneakers Urban Icon",
+        precio: 139.90,
+        imagen: "productos_imagenes/SNEAKERS - URBAN ICON.png"
     },
     {
         id: 4,
-        nombre: "Sneaker Premium Blue",
-        precio: 120.00,
-        imagen: "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=400&h=400&fit=crop"
+        nombre: "Sneakers Urban Legend",
+        precio: 149.90,
+        imagen: "productos_imagenes/SNEAKERS - URBAN LEGEND.png"
+    },
+    {
+        id: 5,
+        nombre: "Sneakers Urban Minimalist",
+        precio: 119.90,
+        imagen: "productos_imagenes/SNEAKERS - URBAN MINIMALIST.png"
+    },
+    {
+        id: 6,
+        nombre: "Sneakers Urban Renewal",
+        precio: 139.90,
+        imagen: "productos_imagenes/SNEAKERS - URBAN RENEWAL.png"
+    },
+    {
+        id: 7,
+        nombre: "Sneakers Urban Stell",
+        precio: 139.90,
+        imagen: "productos_imagenes/SNEAKERS - URBAN STELL.png"
+    },
+    {
+        id: 8,
+        nombre: "Sneakers Urban Tradition",
+        precio: 129.90,
+        imagen: "productos_imagenes/SNEAKERS - URBAN TRADITION.png"
+    },
+    {
+        id: 9,
+        nombre: "Sneakers Urban Trailblazer",
+        precio: 149.90,
+        imagen: "productos_imagenes/SNEAKERS - URBAN TRAILBLAZER.png"
     }
 ];
 
