@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SNEAKERS STYLE S.A.C. - Productos</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <!-- Estilos personalizados -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Navbar Moderno -->
+    <header class="header" id="header">
+        <a href="index.html" class="logo-container">
+            <div class="logo">
+                <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#ff6b6b;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#4ecdc4;stop-opacity:1" />
+                        </linearGradient>
+                    </defs>
+                    <path d="M30 70 L50 30 L70 70" fill="url(#grad1)" stroke="url(#grad1)" stroke-width="2"/>
+                    <circle cx="50" cy="50" r="45" fill="none" stroke="url(#grad1)" stroke-width="2" opacity="0.3"/>
+                </svg>
+            </div>
+            <div class="logo-text">SNEAKERS STYLE</div>
+        </a>
+        
+        <nav class="main-menu" id="mainMenu">
+            <a href="index.html" class="menu-item">Inicio</a>
+            <a href="productos.html" class="menu-item active">Productos</a>
+            <a href="checkout.html" class="menu-item">
+                <i class="bi bi-cart3"></i>
+                <span class="badge-cart" id="contador-carrito">0</span>
+            </a>
+        </nav>
+        
+        <div class="menu-toggle" id="menuToggle">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+    </header>
+
+    <!-- Contenido Principal -->
+    <section class="container my-5" id="productos-section" style="padding-top: 120px;">
+        <h1 class="text-center mb-5 section-title">🛍️ Nuestro Catálogo</h1>
+        <div class="row" id="catalogo-productos">
+            <!-- Los productos se cargarán dinámicamente aquí -->
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-copyright">
+                <h5>SNEAKERS STYLE S.A.C.</h5>
+                <p>RUC: 20659874231</p>
+                <p>Av. Leguía N.º 1540, Tacna</p>
+            </div>
+            <div class="footer-links">
+                <p>&copy; 2024 SNEAKERS STYLE S.A.C. Todos los derechos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scroll to top button -->
+    <div class="scroll-to-top" id="scrollToTop">
+        <span>↑</span>
+    </div>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Scripts propios -->
+    <script src="productos.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
